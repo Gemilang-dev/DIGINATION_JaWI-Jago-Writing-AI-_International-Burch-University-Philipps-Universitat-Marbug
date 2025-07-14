@@ -1,0 +1,206 @@
+<!-- 
+  File: views/user/history.html
+  Menampilkan daftar riwayat dan detail hasil di halaman yang sama.
+-->
+<!-- Memuat Chart.js untuk menampilkan grafik jika ada -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div id="history-page-container">
+
+  <!-- Tampilan 1: Daftar Riwayat (Awalnya Terlihat) -->
+  <div id="history-list-view" class="space-y-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Riwayat Latihan Anda</h1>
+      <p class="mt-2 text-gray-500">Pilih salah satu riwayat di bawah ini untuk melihat kembali hasil analisis detailnya.</p>
+    </div>
+    <div id="history-list-container" class="space-y-3">
+      <div id="loading-history" class="text-center py-10"><p class="text-gray-600">Memuat riwayat...</p></div>
+    </div>
+  </div>
+
+  <!-- Tampilan 2: Detail Hasil (Awalnya Tersembunyi) -->
+  <div id="history-detail-view" class="hidden space-y-6">
+    <div>
+      <button id="back-to-history-btn" class="inline-flex items-center gap-2 text-teal-600 hover:text-teal-800 font-medium">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        Kembali ke Daftar Riwayat
+      </button>
+    </div>
+    <div id="result-details-container" class="space-y-6">
+      <!-- Konten detail akan dirender di sini oleh JavaScript -->
+    </div>
+  </div>
+
+</div>
+
+<script>
+$(document).ready(function() {
+    const listView = $('#history-list-view');
+    const detailView = $('#history-detail-view');
+    const historyListContainer = $('#history-list-container');
+    const resultContainer = $('#result-details-container');
+    const loadingHistory = $('#loading-history');
+
+    // === FUNGSI LENGKAP UNTUK MERENDER LAPORAN FEEDBACK MENJADI HTML ===
+    function renderDetailedFeedback(feedback) {
+        let html = '<h2 class="text-3xl font-bold text-center mb-6">Detail Hasil Analisis</h2>';
+        
+        // 1. Bagian Skor Keseluruhan
+        html += `
+        <div class="bg-teal-50 border border-teal-200 rounded-lg p-8 text-center mb-6">
+            <p class="text-sm font-medium text-gray-600">Est. Overall Band Score</p>
+            <p class="text-7xl font-bold text-teal-600 my-2">${parseFloat(feedback.overallScore.score).toFixed(1)}</p>
+            <p class="text-xs text-gray-500">${feedback.overallScore.summary}</p>
+            <div class="grid grid-cols-4 gap-4 mt-8 text-center border-t border-teal-200 pt-6">
+                <div><p class="text-xs text-gray-500">TA/TR</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[0].score).toFixed(1)}</p></div>
+                <div><p class="text-xs text-gray-500">CC</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[1].score).toFixed(1)}</p></div>
+                <div><p class="text-xs text-gray-500">LR</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[2].score).toFixed(1)}</p></div>
+                <div><p class="text-xs text-gray-500">GRA</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[3].score).toFixed(1)}</p></div>
+            </div>
+        </div>`;
+
+        // 2. Rincian Kriteria
+        feedback.criteriaScores.forEach(criteria => {
+            html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6"><h3 class="text-xl font-bold text-gray-800">${criteria.name}: ${parseFloat(criteria.score).toFixed(1)}</h3><p class="mt-2 text-gray-600">${criteria.summary}</p><div class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 border-t pt-4">`;
+            if (criteria.subScores) {
+                criteria.subScores.forEach(sub => { html += `<div class="flex justify-between text-sm"><span class="text-gray-500">${sub.name}</span><span class="font-bold text-gray-800">${sub.score}</span></div>`; });
+            }
+            html += `</div></div>`;
+        });
+
+        // 3. Analisis Paragraf
+        if (feedback.paragraphAnalysis && feedback.paragraphAnalysis.length > 0) {
+            html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6"><h3 class="text-2xl font-bold text-center mb-4">Penilaian Rinci Tiap Paragraf</h3>`;
+            feedback.paragraphAnalysis.forEach(p => { html += `<div class="mb-6 border-b pb-6 last:border-b-0"><h4 class="font-bold text-lg text-teal-700 uppercase">${p.paragraphName}</h4><blockquote class="mt-2 border-l-4 border-gray-300 pl-4 italic text-gray-600">"${p.originalText}"</blockquote><p class="mt-4"><strong class="font-semibold text-gray-800">Komentar:</strong> ${p.comments}</p><p class="mt-2"><strong class="font-semibold text-gray-800">Saran Penulisan Ulang:</strong> <em class="text-gray-700">"${p.howToRewrite}"</em></p></div>`; });
+            html += `</div>`;
+        }
+
+        // 4. Tabel Variasi Struktur Kalimat
+        if (feedback.sentenceStructureSuggestions && feedback.sentenceStructureSuggestions.length > 0) {
+            html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6"><h3 class="text-2xl font-bold text-center mb-4">Saran Variasi Struktur Kalimat</h3><div class="w-full"><table class="w-full table-fixed border-collapse border border-slate-400 text-sm"><thead class="bg-gray-100"><tr><th class="w-1/4 border border-slate-300 p-2 font-medium text-gray-900 text-left">Struktur</th><th class="w-1/2 border border-slate-300 p-2 font-medium text-gray-900 text-left">Kalimat Asli</th><th class="w-1/2 border border-slate-300 p-2 font-medium text-gray-900 text-left">Saran Perbaikan</th></tr></thead><tbody>`;
+            feedback.sentenceStructureSuggestions.forEach(s => { html += `<tr class="border-t border-slate-300"><td class="p-2 font-medium text-gray-800 break-words align-top">${s.grammarStructure}</td><td class="p-2 text-gray-700 break-words align-top">${s.originalSentence}</td><td class="p-2 text-gray-700 break-words align-top">${s.rephrasedSentence}</td></tr>`; });
+            html += `</tbody></table></div></div>`;
+        }
+
+        // 5. Tabel Peningkatan Kohesi
+        if (feedback.cohesionSuggestions && feedback.cohesionSuggestions.length > 0) {
+            html += `<div class="bg-white border border-gray-200 rounded-lg p-6"><h3 class="text-2xl font-bold text-center mb-4">Saran Peningkatan Kohesi</h3><div class="w-full"><table class="w-full table-fixed border-collapse border border-slate-400 text-sm"><thead class="bg-gray-100"><tr><th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Teks Asli</th><th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Saran Perbaikan</th><th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Penjelasan</th></tr></thead><tbody>`;
+            feedback.cohesionSuggestions.forEach(c => { html += `<tr class="border-t border-slate-300"><td class="p-2 text-gray-700 break-words align-top">${c.originalText}</td><td class="p-2 font-medium text-teal-600 break-words align-top">${c.improvedText}</td><td class="p-2 text-gray-700 break-words align-top">${c.explanation}</td></tr>`; });
+            html += `</tbody></table></div></div>`;
+        }
+        
+        return html;
+    }
+
+    // Fungsi untuk menampilkan detail hasil
+    function showDetailView(submissionId) {
+        listView.hide();
+        detailView.show();
+        resultContainer.html('<div class="text-center py-10"><p class="text-gray-600">Memuat detail hasil...</p></div>');
+
+        const dataPath = `../data/${submissionId}.json`;
+
+        $.getJSON(dataPath, function(data) {
+            const { question, answer, feedback } = data;
+            
+            let resultHtml = '';
+            let questionHtml = `
+                <div class="p-6 bg-white rounded-lg shadow-md space-y-4 mb-6">
+                    <h2 class="text-xl font-bold">Soal</h2>
+                    <p class="text-gray-700">${question.questionText || question}</p>`;
+            
+            if (question.chartData) {
+                questionHtml += `<div class="relative w-full max-w-3xl mx-auto h-96 mt-4"><canvas id="result-chart"></canvas></div>`;
+            }
+            questionHtml += `</div>`;
+            resultHtml += questionHtml;
+
+            resultHtml += `
+                <div class="p-6 bg-white rounded-lg shadow-md space-y-4">
+                    <h2 class="text-xl font-bold">Jawaban Anda</h2>
+                    <p class="text-gray-700 whitespace-pre-wrap">${answer}</p>
+                </div>
+            `;
+
+            resultHtml += renderDetailedFeedback(feedback);
+            resultContainer.html(resultHtml);
+
+            if (question.chartData) {
+                setTimeout(function() {
+                    const ctx = document.getElementById('result-chart');
+                    if (ctx) {
+                        new Chart(ctx.getContext('2d'), question.chartData);
+                    }
+                }, 100);
+            }
+        }).fail(function() {
+            resultContainer.html(`<p class="text-red-500">Error: Gagal memuat data untuk riwayat ${submissionId}.</p>`);
+        });
+    }
+
+    // Fungsi untuk menampilkan daftar riwayat
+    function showListView() {
+        detailView.hide();
+        listView.show();
+    }
+
+    // === LOGIKA UTAMA & EVENT LISTENERS ===
+
+    // KOREKSI: Memuat daftar riwayat dari file history_list.json
+    $.getJSON('../data/history_list.json', function(data) {
+        loadingHistory.hide();
+        historyListContainer.empty();
+
+        if (!data || data.length === 0) {
+            historyListContainer.html('<p class="text-center text-gray-500">Anda belum memiliki riwayat latihan.</p>');
+            return;
+        }
+
+        // Urutkan dari yang terbaru
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        data.forEach(item => {
+            const score = parseFloat(item.score);
+            const date = new Date(item.date);
+            const formattedDate = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            const words = item.questionPrompt.split(' ');
+            const truncatedQuestion = words.slice(0, 15).join(' ') + (words.length > 15 ? '...' : '');
+
+            let bgColorClass = '';
+            if (score < 5.5) bgColorClass = 'bg-red-100 hover:bg-red-200 border-red-200';
+            else if (score <= 6.5) bgColorClass = 'bg-yellow-100 hover:bg-yellow-200 border-yellow-200';
+            else bgColorClass = 'bg-green-100 hover:bg-green-200 border-green-200';
+
+            const historyItemHtml = `
+                <div data-id="${item.id}" class="history-bubble block p-4 rounded-lg border ${bgColorClass} transition shadow-sm cursor-pointer">
+                    <div class="flex justify-between items-center gap-4">
+                        <div class="font-medium text-gray-800 flex-1 min-w-0">
+                            <p class="font-bold">${formattedDate} - ${item.taskType}</p>
+                            <p class="text-sm text-gray-600 truncate">"${truncatedQuestion}"</p>
+                        </div>
+                        <div class="text-lg font-bold text-gray-900 flex-shrink-0">
+                            Band: <span class="text-xl">${score.toFixed(1)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            historyListContainer.append(historyItemHtml);
+        });
+    }).fail(function() {
+        loadingHistory.text('Gagal memuat riwayat. Pastikan file data/history_list.json ada.');
+    });
+
+
+    // Event listener untuk mengklik bubble riwayat
+    historyListContainer.on('click', '.history-bubble', function() {
+        const submissionId = $(this).data('id');
+        showDetailView(submissionId);
+    });
+
+    // Event listener untuk tombol kembali
+    $('#back-to-history-btn').on('click', function() {
+        showListView();
+    });
+});
+</script>

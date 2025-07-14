@@ -3,7 +3,7 @@
 
 const TaskMakerOne = {
     // GANTI DENGAN API KEY ANDA
-    GEMINI_API_KEY: "Mau API Gemini ?",
+    GEMINI_API_KEY: "AIzaSyCqvnrpbtEry1ZzcLL0Bfb1Ctil2nx9g1I",
 
     async generateQuestion() {
         console.log("Requesting new Task 1 question from Gemini...");

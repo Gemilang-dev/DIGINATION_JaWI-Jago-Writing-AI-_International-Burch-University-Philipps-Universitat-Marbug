@@ -3,7 +3,7 @@
 
 const GradeTaskOne = {
     // GANTI DENGAN API KEY ANDA
-    GEMINI_API_KEY: "Mau API Gemini ?",
+    GEMINI_API_KEY: "AIzaSyCfU12_CTpkhYKn4b1opJeztP-qw0Ll6E4",
 
     async gradeAnswer(questionData, userAnswer) {
         console.log("Sending answer for detailed grading...");
@@ -91,7 +91,7 @@ const GradeTaskOne = {
             }
         `;
 
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.GEMINI_API_KEY}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.GEMINI_API_KEY}`; 
 
         try {
             const response = await fetch(API_URL, {

@@ -7,7 +7,7 @@
       config = $.extend(
         {
           defaultView  : $("main#spapp > section:last-child").attr("id"),
-          templateDir: "../views/",
+          templateDir: "views/",
           pageNotFound: false,
         },
         options
@@ -29,11 +29,18 @@
   
       // manage hash change
       var routeChange = function () {
-        var id = location.hash.slice(1);
+        var fullHash = location.hash.slice(1);
+        
+        // ==========================================================
+        // === PERBAIKAN UTAMA DI SINI ===
+        // Ambil hanya bagian pertama dari hash sebagai ID view
+        var id = fullHash.split('/')[0];
+        // ==========================================================
+
         var route = routes[id];
         var elm = $("#" + id);
   
-        if (!elm || !route) {
+        if (!elm.length || !route) {
           if (config.pageNotFound) {
             window.location.hash = config.pageNotFound;
             return;
@@ -41,7 +48,10 @@
           console.log(id + " not defined");
           return;
         }
-  
+
+        $("main#spapp > section").hide();
+        elm.show();
+
         if (elm.hasClass("spapp-created")) {
           route.onReady();
         } else {
@@ -72,5 +82,4 @@
   
       return this;
     };
-  })(jQuery);
-  
+})(jQuery);

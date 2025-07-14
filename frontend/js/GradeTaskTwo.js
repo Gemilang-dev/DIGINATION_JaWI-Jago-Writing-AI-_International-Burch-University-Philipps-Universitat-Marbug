@@ -1,24 +1,24 @@
-// File: js/GradeTaskOne.js
-// Bertanggung jawab untuk menilai jawaban Task 1 melalui Serverless Function.
+// File: js/GradeTaskTwo.js
+// Bertanggung jawab untuk menilai esai Task 2 melalui Serverless Function.
 
-const GradeTaskOne = {
+const GradeTaskTwo = {
     // API Key telah dihapus dari sini untuk keamanan.
 
-    async gradeAnswer(questionData, userAnswer) {
-        console.log("Sending Task 1 answer for grading via Serverless Function...");
+    async gradeAnswer(question, userAnswer) {
+        console.log("Sending Task 2 essay for grading via Serverless Function...");
 
         const prompt = `
-            You are a professional IELTS Writing examiner. Your task is to evaluate the following IELTS Writing Task 1 response.
+            You are a professional IELTS Writing examiner. Your task is to evaluate the following IELTS Writing Task 2 essay.
             Provide the output ONLY in a valid JSON format. Do not add any text outside the JSON object.
 
-            The user was given this question: "${questionData.questionText}"
-            The user wrote this answer: "${userAnswer}"
+            The user was given this question: "${question}"
+            The user wrote this essay: "${userAnswer}"
 
-            Analyze the answer and provide feedback in the following JSON structure:
+            Analyze the essay and provide feedback in the following JSON structure:
             {
               "overallScore": { "score": "float", "summary": "string" },
               "criteriaScores": [
-                { "name": "Task Achievement (TA)", "score": "float", "summary": "string", "subScores": [ { "name": "Relevance to Prompt", "score": "integer" }, { "name": "Key Data Selection", "score": "integer" } ] },
+                { "name": "Task Response (TR)", "score": "float", "summary": "string", "subScores": [ { "name": "Relevance to Prompt", "score": "integer" }, { "name": "Clarity of Position", "score": "integer" } ] },
                 { "name": "Coherence & Cohesion (CC)", "score": "float", "summary": "string", "subScores": [ { "name": "Logical Organization", "score": "integer" }, { "name": "Cohesive Devices Usage", "score": "integer" } ] },
                 { "name": "Lexical Resource (LR)", "score": "float", "summary": "string", "subScores": [ { "name": "Vocabulary Range", "score": "integer" }, { "name": "Lexical Accuracy", "score": "integer" } ] },
                 { "name": "Grammatical Range & Accuracy (GRA)", "score": "float", "summary": "string", "subScores": [ { "name": "Sentence Structure Variety", "score": "integer" }, { "name": "Grammar Accuracy", "score": "integer" } ] }
@@ -43,16 +43,15 @@ const GradeTaskOne = {
             }
 
             const result = await response.json();
-            
             const rawResponseText = result.candidates[0].content.parts[0].text;
             const cleanedJsonText = rawResponseText.replace(/^```json\s*/, '').replace(/```$/, '');
             const feedbackData = JSON.parse(cleanedJsonText);
 
-            console.log("Task 1 grading complete. Feedback received:", feedbackData);
+            console.log("Task 2 grading complete. Feedback received:", feedbackData);
             return feedbackData;
 
         } catch (error) {
-            console.error("Error grading Task 1 answer:", error);
+            console.error("Error grading Task 2 answer:", error);
             throw error;
         }
     }

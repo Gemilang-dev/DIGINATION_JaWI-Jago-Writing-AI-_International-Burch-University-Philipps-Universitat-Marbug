@@ -34,12 +34,15 @@
     <div id="loading-feedback" class="p-6 bg-white rounded-lg shadow-md text-center py-10">
       <p class="text-gray-600">AI sedang menilai jawaban Anda, mohon tunggu...</p>
     </div>
+    <div id="download-button-container" class="text-center"></div>
     <div id="feedback-content" class="space-y-6"></div>
   </div>
 </div>
 
 <!-- Library & Skrip -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <!-- Path ini diasumsikan benar berdasarkan koreksi Anda sebelumnya -->
 <script src="../js/TaskMakerOne.js"></script>
 <script src="../js/GradeTaskOne.js"></script>
@@ -47,12 +50,12 @@
 
 <!-- Skrip untuk mengontrol halaman ini -->
 <script>
-  // KOREKSI: Menggabungkan semua logika ke dalam SATU blok $(document).ready()
   $(document).ready(function() {
     
     // === DEKLARASI VARIABEL ===
     let currentQuestionData = null;
-    let myChart = null; // Variabel untuk menyimpan instance chart
+    let currentFeedbackData = null;
+    let myChart = null;
     let timerInterval = null;
     let timeInSeconds = 20 * 60;
     let timerStarted = false;
@@ -63,7 +66,6 @@
     function renderFeedback(feedback) {
         let html = '<h2 class="text-3xl font-bold text-center mb-6">Hasil Analisis AI</h2>';
         
-        // KOREKSI: Menggunakan parseFloat() untuk memastikan nilai adalah angka sebelum .toFixed()
         // 1. Bagian Skor Keseluruhan
         html += `
         <div class="bg-teal-50 border border-teal-200 rounded-lg p-8 text-center mb-6">
@@ -77,60 +79,135 @@
                 <div><p class="text-xs text-gray-500">GRA</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[3].score).toFixed(1)}</p></div>
             </div>
         </div>`;
+
         // 2. Bagian Rincian Kriteria
         feedback.criteriaScores.forEach(criteria => {
-            html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                        <h3 class="text-xl font-bold text-gray-800">${criteria.name}: ${parseFloat(criteria.score).toFixed(1)}</h3>
-                        <p class="mt-2 text-gray-600">${criteria.summary}</p>
-                        <div class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 border-t pt-4">`;
+            html += `
+            <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                <h3 class="text-xl font-bold text-gray-800">${criteria.name}: ${parseFloat(criteria.score).toFixed(1)}</h3>
+                <p class="mt-2 text-gray-600">${criteria.summary}</p>
+                <div class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 border-t pt-4">`;
             criteria.subScores.forEach(sub => {
                 html += `<div class="flex justify-between text-sm"><span class="text-gray-500">${sub.name}</span><span class="font-bold text-gray-800">${sub.score}</span></div>`;
             });
             html += `</div></div>`;
         });
+        
         // 3. Bagian Analisis Paragraf
         html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                     <h3 class="text-2xl font-bold text-center mb-4">Penilaian Rinci Tiap Paragraf</h3>`;
         feedback.paragraphAnalysis.forEach(p => {
-            html += `<div class="mb-6 border-b pb-6">
-                        <h4 class="font-bold text-lg text-teal-700 uppercase">${p.paragraphName}</h4>
-                        <blockquote class="mt-2 border-l-4 border-gray-300 pl-4 italic text-gray-600">"${p.originalText}"</blockquote>
-                        <p class="mt-4"><strong class="font-semibold text-gray-800">Komentar:</strong> ${p.comments}</p>
-                        <p class="mt-2"><strong class="font-semibold text-gray-800">Saran Penulisan Ulang:</strong> <em class="text-gray-700">"${p.howToRewrite}"</em></p>
-                     </div>`;
+            html += `
+            <div class="mb-6 border-b pb-6 last:border-b-0 last:pb-0">
+                <h4 class="font-bold text-lg text-teal-700 uppercase">${p.paragraphName}</h4>
+                <blockquote class="mt-2 border-l-4 border-gray-300 pl-4 italic text-gray-600">"${p.originalText}"</blockquote>
+                <p class="mt-4"><strong class="font-semibold text-gray-800">Komentar:</strong> ${p.comments}</p>
+                <p class="mt-2"><strong class="font-semibold text-gray-800">Saran Penulisan Ulang:</strong> <em class="text-gray-700">"${p.howToRewrite}"</em></p>
+            </div>`;
         });
         html += `</div>`;
+
         // 4. Tabel Variasi Struktur Kalimat
-        html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-                    <h3 class="text-2xl font-bold text-center mb-4">Saran Variasi Struktur Kalimat</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
-                            <thead class="text-left"><tr><th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Struktur Tata Bahasa</th><th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Kalimat Asli</th><th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Saran Perbaikan</th></tr></thead>
-                            <tbody class="divide-y divide-gray-200">`;
+        html += `
+        <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <h3 class="text-2xl font-bold text-center mb-4">Saran Variasi Struktur Kalimat</h3>
+            <div class="w-full">
+                <table class="w-full table-fixed border-collapse border border-slate-400 text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="w-1/4 border border-slate-300 p-2 font-medium text-gray-900 text-left">Struktur</th>
+                            <th class="w-1/2 border border-slate-300 p-2 font-medium text-gray-900 text-left">Kalimat Asli</th>
+                            <th class="w-1/2 border border-slate-300 p-2 font-medium text-gray-900 text-left">Saran Perbaikan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">`;
         feedback.sentenceStructureSuggestions.forEach(s => {
-            html += `<tr>
-                        <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">${s.grammarStructure}</td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">${s.originalSentence}</td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">${s.rephrasedSentence}</td>
-                     </tr>`;
+            html += `
+            <tr>
+                <td class="border border-slate-300 p-2 font-medium text-gray-800 break-words">${s.grammarStructure}</td>
+                <td class="border border-slate-300 p-2 text-gray-700 break-words">${s.originalSentence}</td>
+                <td class="border border-slate-300 p-2 text-gray-700 break-words">${s.rephrasedSentence}</td>
+            </tr>`;
         });
         html += `</tbody></table></div></div>`;
+
         // 5. Tabel Peningkatan Kohesi
-        html += `<div class="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-2xl font-bold text-center mb-4">Saran Peningkatan Kohesi</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y-2 divide-gray-200 text-sm">
-                            <thead class="text-left"><tr><th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Teks Asli</th><th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Saran Perbaikan</th><th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Penjelasan</th></tr></thead>
-                            <tbody class="divide-y divide-gray-200">`;
+        html += `
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 class="text-2xl font-bold text-center mb-4">Saran Peningkatan Kohesi</h3>
+            <div class="w-full">
+                <table class="w-full table-fixed border-collapse border border-slate-400 text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Teks Asli</th>
+                            <th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Saran Perbaikan</th>
+                            <th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Penjelasan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">`;
         feedback.cohesionSuggestions.forEach(c => {
-            html += `<tr>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">${c.originalText}</td>
-                        <td class="whitespace-nowrap px-4 py-2 font-medium text-teal-600">${c.improvedText}</td>
-                        <td class="whitespace-nowrap px-4 py-2 text-gray-700">${c.explanation}</td>
-                     </tr>`;
+            html += `
+            <tr>
+                <td class="border border-slate-300 p-2 text-gray-700 break-words">${c.originalText}</td>
+                <td class="border border-slate-300 p-2 font-medium text-teal-600 break-words">${c.improvedText}</td>
+                <td class="border border-slate-300 p-2 text-gray-700 break-words">${c.explanation}</td>
+            </tr>`;
         });
         html += `</tbody></table></div></div>`;
+        
         return html;
+    }
+
+    // Fungsi untuk membuat dokumen .docx
+    function generateDocxReport(question, answer, feedback) {
+        const { Packer, Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, HeadingLevel } = docx;
+
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({ text: "Laporan Penilaian IELTS Writing - JaWi AI", heading: HeadingLevel.TITLE, alignment: 'center', spacing: { after: 400 } }),
+                    new Paragraph({ text: `Tanggal: ${new Date().toLocaleDateString()}`, spacing: { after: 200 } }),
+                    
+                    new Paragraph({ text: "Soal (Topic)", heading: HeadingLevel.HEADING_2, spacing: { before: 300, after: 100 } }),
+                    new Paragraph({ text: question.questionText, spacing: { after: 300 } }),
+
+                    new Paragraph({ text: "Jawaban Anda (Your Response)", heading: HeadingLevel.HEADING_2, spacing: { before: 300, after: 100 } }),
+                    new Paragraph({ text: answer, spacing: { after: 400 } }),
+
+                    new Paragraph({ text: "Hasil Penilaian", heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
+                    
+                    new Paragraph({ text: `Skor Keseluruhan: ${parseFloat(feedback.overallScore.score).toFixed(1)}`, heading: HeadingLevel.HEADING_2 }),
+                    new Paragraph({ text: feedback.overallScore.summary, spacing: { after: 400 } }),
+
+                    // ... (Anda bisa menambahkan lebih banyak bagian di sini, seperti tabel kriteria) ...
+
+                    new Paragraph({ text: "Saran Peningkatan Kohesi", heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }),
+                    new Table({
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        rows: [
+                            new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph({ text: "Teks Asli", bold: true })] }),
+                                    new TableCell({ children: [new Paragraph({ text: "Saran Perbaikan", bold: true })] }),
+                                    new TableCell({ children: [new Paragraph({ text: "Penjelasan", bold: true })] }),
+                                ],
+                            }),
+                            ...feedback.cohesionSuggestions.map(c => new TableRow({
+                                children: [
+                                    new TableCell({ children: [new Paragraph(c.originalText)] }),
+                                    new TableCell({ children: [new Paragraph(c.improvedText)] }),
+                                    new TableCell({ children: [new Paragraph(c.explanation)] }),
+                                ]
+                            }))
+                        ],
+                    }),
+                ],
+            }],
+        });
+
+        Packer.toBlob(doc).then(blob => {
+            saveAs(blob, `JaWi-AI-Feedback-${new Date().getTime()}.docx`);
+        });
     }
 
     // Fungsi untuk mengupdate tampilan timer
@@ -206,13 +283,16 @@
       $('#feedback-container').show();
       $('#loading-feedback').show();
       $('#feedback-content').empty().hide();
+      $('#download-button-container').empty();
 
       GradeTaskOne.gradeAnswer(currentQuestionData, userAnswer).then(feedback => {
+        currentFeedbackData = feedback;
         $('#loading-feedback').hide();
         
-        // KOREKSI: Memanggil fungsi renderFeedback yang sudah Anda buat
         const feedbackHtml = renderFeedback(feedback);
         $('#feedback-content').html(feedbackHtml).show();
+
+
 
         const submissionId = `submission_task1_${new Date().getTime()}`;
         localStorage.setItem(submissionId, JSON.stringify({
@@ -220,12 +300,22 @@
           answer: userAnswer,
           feedback: feedback
         }));
-        alert('Hasil penilaian telah disimpan di Local Storage!');
+        
 
       }).catch(error => {
         $('#loading-feedback').text('Gagal mendapatkan penilaian. Silakan coba lagi.');
         console.error(error);
       });
+    });
+
+    // 5. Event listener untuk tombol download
+    $('body').on('click', '#download-report-btn', function() {
+        if (currentQuestionData && currentFeedbackData) {
+            const userAnswer = $('#user-answer').val();
+            generateDocxReport(currentQuestionData, userAnswer, currentFeedbackData);
+        } else {
+            alert("Data feedback tidak ditemukan untuk diunduh.");
+        }
     });
   });
 </script>

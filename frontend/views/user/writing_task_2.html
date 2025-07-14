@@ -1,189 +1,227 @@
 <!-- 
-  File: views/user/writing_task_1.html
-  Halaman untuk latihan IELTS Writing Task 1.
+  File: views/user/writing_task_2.html
+  Halaman untuk latihan IELTS Writing Task 2 (Esai).
 -->
-
-<!-- <style>
-  main#spapp > section {
-    display: none; /* Sembunyikan semua section secara default */
-  }
-  main#spapp > section.spapp-active {
-    display: block; /* Hanya tampilkan section yang aktif */
-  }
-</style> -->
 <div class="space-y-6">
   <!-- Header Halaman -->
   <div>
-    <h1 class="text-3xl font-bold text-gray-900">Latihan: IELTS Writing Task 1</h1>
-    <p class="mt-2 text-gray-500">Analisis data visual di bawah ini dan tulis laporan singkat minimal 150 kata dalam 20 menit.</p>
+    <h1 class="text-3xl font-bold text-gray-900">Latihan: IELTS Writing Task 2</h1>
+    <p class="mt-2 text-gray-500">Tulis esai minimal 250 kata dalam waktu 40 menit untuk menjawab pertanyaan di bawah ini.</p>
   </div>
 
-  <!-- Area Soal dan Grafik -->
-  <div id="task-1-question-container" class="p-6 bg-white rounded-lg shadow-md">
-    <div id="loading-question" class="text-center py-10">
-      <p class="text-gray-600">Membuat soal baru dengan AI...</p>
-      <!-- Anda bisa menambahkan animasi loading di sini -->
+  <!-- Area Soal -->
+  <div id="task-2-question-container" class="p-6 bg-white rounded-lg shadow-md">
+    <div id="loading-question-t2" class="text-center py-10">
+      <p class="text-gray-600">Membuat soal esai baru dengan AI...</p>
     </div>
-    <!-- Konten soal akan dimuat di sini oleh TaskMakerOne.js -->
-    <p id="question-text" class="mb-4 text-gray-700"></p>
-    <div class="w-full max-w-2xl mx-auto">
-      <canvas id="task-1-chart"></canvas>
-    </div>
+    <p id="question-text-t2" class="text-lg font-semibold text-gray-800"></p>
   </div>
 
   <!-- Area Jawaban Pengguna -->
   <div class="p-6 bg-white rounded-lg shadow-md">
-    <!-- Header Area Jawaban dengan Timer -->
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Jawaban Anda</h2>
-      <!-- Timer Box -->
-      <div id="timer-box" class="px-4 py-1.5 rounded-md text-white font-bold text-lg border-2 border-gray-400 bg-gray-400">
-        20:00
+      <h2 class="text-xl font-bold">Esai Anda</h2>
+      <div id="timer-box-t2" class="px-4 py-1.5 rounded-md text-white font-bold text-lg border-2 border-gray-400 bg-gray-400">
+        40:00
       </div>
     </div>
-    
-    <textarea id="user-answer" class="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500" placeholder="Tulis laporan Anda di sini untuk memulai timer..."></textarea>
-    
+    <textarea id="user-answer-t2" class="w-full h-96 p-3 border border-gray-300 rounded-md" placeholder="Tulis esai Anda di sini untuk memulai timer..."></textarea>
     <div class="flex justify-between items-center mt-4">
-      <p class="text-sm text-gray-500">Jumlah Kata: <span id="word-count">0</span></p>
-      <button id="submit-answer-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition">
+      <p class="text-sm text-gray-500">Jumlah Kata: <span id="word-count-t2">0</span></p>
+      <button id="submit-answer-btn-t2" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition" disabled>
         Kirim & Dapatkan Nilai
       </button>
     </div>
   </div>
 
   <!-- Area Hasil Umpan Balik -->
-  <div id="feedback-container" class="hidden p-6 bg-white rounded-lg shadow-md">
-    <div id="loading-feedback" class="text-center py-10">
-      <p class="text-gray-600">AI sedang menilai jawaban Anda, mohon tunggu...</p>
+  <div id="feedback-container-t2" class="hidden space-y-6">
+    <div id="loading-feedback-t2" class="p-6 bg-white rounded-lg shadow-md text-center py-10">
+      <p class="text-gray-600">AI sedang menilai esai Anda, mohon tunggu...</p>
     </div>
-    <!-- Hasil umpan balik akan ditampilkan di sini oleh GradeTaskOne.js -->
-    <div id="feedback-content"></div>
+    <div id="download-button-container-t2" class="text-center"></div>
+    <div id="feedback-content-t2" class="space-y-6"></div>
   </div>
 </div>
 
-<!-- Memuat Library & Skrip Spesifik untuk Halaman Ini -->
-<!-- Chart.js untuk membuat grafik -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Skrip custom untuk halaman ini -->
-<script src="../js/TaskMakerOne.js"></script>
-<script src="../js/GradeTaskOne.js"></script>
+<!-- KOREKSI: Path ke file JS diperbaiki dari ../js/ menjadi js/ -->
+<script src="../js/TaskMakerTwo.js"></script>
+<script src="../js/GradeTaskTwo.js"></script>
+<script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-<!-- Skrip untuk mengontrol halaman ini -->
 <script>
   $(document).ready(function() {
-    let currentQuestionData = null; // Untuk menyimpan data soal saat ini
+    // Deklarasi variabel spesifik untuk Task 2
+    let currentQuestion = "";
+    let currentFeedbackData = null;
+    let timerInterval_t2 = null;
+    let timeInSeconds_t2 = 40 * 60; // 40 menit
+    let timerStarted_t2 = false;
 
-        // --- Variabel untuk Timer ---
-    let timerInterval = null;
-    let timeInSeconds = 20 * 60; // 20 menit
-    let timerStarted = false;
+    // Fungsi untuk merender laporan feedback menjadi HTML
+    function renderFeedback(feedback) {
+        let html = '<h2 class="text-3xl font-bold text-center mb-6">Hasil Analisis AI</h2>';
+        // 1. Skor Keseluruhan
+        html += `
+        <div class="bg-teal-50 border border-teal-200 rounded-lg p-8 text-center mb-6">
+            <p class="text-sm font-medium text-gray-600">Est. Overall Band Score</p>
+            <p class="text-7xl font-bold text-teal-600 my-2">${parseFloat(feedback.overallScore.score).toFixed(1)}</p>
+            <p class="text-xs text-gray-500">${feedback.overallScore.summary}</p>
+            <div class="grid grid-cols-4 gap-4 mt-8 text-center border-t border-teal-200 pt-6">
+                <div><p class="text-xs text-gray-500">TR</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[0].score).toFixed(1)}</p></div>
+                <div><p class="text-xs text-gray-500">CC</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[1].score).toFixed(1)}</p></div>
+                <div><p class="text-xs text-gray-500">LR</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[2].score).toFixed(1)}</p></div>
+                <div><p class="text-xs text-gray-500">GRA</p><p class="text-2xl font-bold text-gray-800">${parseFloat(feedback.criteriaScores[3].score).toFixed(1)}</p></div>
+            </div>
+        </div>`;
+        // 2. Rincian Kriteria
+        feedback.criteriaScores.forEach(criteria => {
+            html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6"><h3 class="text-xl font-bold text-gray-800">${criteria.name}: ${parseFloat(criteria.score).toFixed(1)}</h3><p class="mt-2 text-gray-600">${criteria.summary}</p><div class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 border-t pt-4">`;
+            criteria.subScores.forEach(sub => { html += `<div class="flex justify-between text-sm"><span class="text-gray-500">${sub.name}</span><span class="font-bold text-gray-800">${sub.score}</span></div>`; });
+            html += `</div></div>`;
+        });
+        // 3. Analisis Paragraf
+        html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6"><h3 class="text-2xl font-bold text-center mb-4">Penilaian Rinci Tiap Paragraf</h3>`;
+        feedback.paragraphAnalysis.forEach(p => { html += `<div class="mb-6 border-b pb-6"><h4 class="font-bold text-lg text-teal-700 uppercase">${p.paragraphName}</h4><blockquote class="mt-2 border-l-4 border-gray-300 pl-4 italic text-gray-600">"${p.originalText}"</blockquote><p class="mt-4"><strong class="font-semibold text-gray-800">Komentar:</strong> ${p.comments}</p><p class="mt-2"><strong class="font-semibold text-gray-800">Saran Penulisan Ulang:</strong> <em class="text-gray-700">"${p.howToRewrite}"</em></p></div>`; });
+        html += `</div>`;
+        
+        // --- KOREKSI PADA TABEL DI BAWAH INI ---
+        
+        // 4. Tabel Variasi Struktur Kalimat
+        html += `<div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                    <h3 class="text-2xl font-bold text-center mb-4">Saran Variasi Struktur Kalimat</h3>
+                    <div class="w-full">
+                        <table class="w-full table-fixed border-collapse border border-slate-400 text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="w-1/4 border border-slate-300 p-2 font-medium text-gray-900 text-left">Struktur</th>
+                                    <th class="w-1/2 border border-slate-300 p-2 font-medium text-gray-900 text-left">Kalimat Asli</th>
+                                    <th class="w-1/2 border border-slate-300 p-2 font-medium text-gray-900 text-left">Saran Perbaikan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">`;
+        feedback.sentenceStructureSuggestions.forEach(s => {
+            html += `<tr>
+                        <td class="border border-slate-300 p-2 font-medium text-gray-800 break-words">${s.grammarStructure}</td>
+                        <td class="border border-slate-300 p-2 text-gray-700 break-words">${s.originalSentence}</td>
+                        <td class="border border-slate-300 p-2 text-gray-700 break-words">${s.rephrasedSentence}</td>
+                     </tr>`;
+        });
+        html += `</tbody></table></div></div>`;
 
-    // Fungsi untuk mengupdate tampilan timer
-    function updateTimerDisplay() {
-        const minutes = Math.floor(timeInSeconds / 60);
-        let seconds = timeInSeconds % 60;
-        seconds = seconds < 10 ? '0' + seconds : seconds; // Tambah nol di depan jika < 10
-
-        $('#timer-box').text(`${minutes}:${seconds}`);
-
-        // Update warna background
-        const timerBox = $('#timer-box');
-        timerBox.removeClass('bg-green-500 bg-yellow-400 bg-red-600 border-green-600 border-yellow-500 border-red-700');
-
-        if (timeInSeconds <= 5 * 60) { // Kurang dari atau sama dengan 5 menit
-            timerBox.addClass('bg-red-600 border-red-700');
-        } else if (timeInSeconds <= 10 * 60) { // Kurang dari atau sama dengan 10 menit
-            timerBox.addClass('bg-yellow-400 border-yellow-500');
-        } else { // Di atas 10 menit
-            timerBox.addClass('bg-green-500 border-green-600');
-        }
+        // 5. Tabel Peningkatan Kohesi
+        html += `<div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-2xl font-bold text-center mb-4">Saran Peningkatan Kohesi</h3>
+                    <div class="w-full">
+                        <table class="w-full table-fixed border-collapse border border-slate-400 text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Teks Asli</th>
+                                    <th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Saran Perbaikan</th>
+                                    <th class="w-1/3 border border-slate-300 p-2 font-medium text-gray-900 text-left">Penjelasan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">`;
+        feedback.cohesionSuggestions.forEach(c => {
+            html += `<tr>
+                        <td class="border border-slate-300 p-2 text-gray-700 break-words">${c.originalText}</td>
+                        <td class="border border-slate-300 p-2 font-medium text-teal-600 break-words">${c.improvedText}</td>
+                        <td class="border border-slate-300 p-2 text-gray-700 break-words">${c.explanation}</td>
+                     </tr>`;
+        });
+        html += `</tbody></table></div></div>`;
+        return html;
+    }
+    
+    // Fungsi download dokumen
+    function generateDocxReport(question, answer, feedback) {
+        alert("Fungsi download sedang dalam pengembangan.");
     }
 
-    // Fungsi untuk memulai timer
+    // Fungsi timer
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeInSeconds_t2 / 60);
+        let seconds = timeInSeconds_t2 % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+        $('#timer-box-t2').text(`${minutes}:${seconds}`);
+        const timerBox = $('#timer-box-t2');
+        timerBox.removeClass('bg-green-500 bg-yellow-400 bg-red-600 border-green-600 border-yellow-500 border-red-700 bg-gray-400 border-gray-400');
+        if (timeInSeconds_t2 <= 10 * 60) { timerBox.addClass('bg-red-600 border-red-700'); } 
+        else if (timeInSeconds_t2 <= 20 * 60) { timerBox.addClass('bg-yellow-400 border-yellow-500'); } 
+        else { timerBox.addClass('bg-green-500 border-green-600'); }
+    }
+
     function startTimer() {
-        if (timerStarted) return; // Jangan mulai lagi jika sudah berjalan
-        timerStarted = true;
-        
-        updateTimerDisplay(); // Update tampilan awal
-
-        timerInterval = setInterval(() => {
-            timeInSeconds--;
+        if (timerStarted_t2) return;
+        timerStarted_t2 = true;
+        updateTimerDisplay();
+        timerInterval_t2 = setInterval(() => {
+            timeInSeconds_t2--;
             updateTimerDisplay();
-
-            if (timeInSeconds <= 0) {
-                clearInterval(timerInterval);
+            if (timeInSeconds_t2 <= 0) {
+                clearInterval(timerInterval_t2);
                 alert("Waktu habis!");
-                $('#user-answer').prop('disabled', true); // Nonaktifkan textarea
-                $('#submit-answer-btn').click(); // Kirim jawaban secara otomatis
+                $('#user-answer-t2').prop('disabled', true);
+                $('#submit-answer-btn-t2').click();
             }
         }, 1000);
     }
 
-    // 1. Secara otomatis membuat soal saat halaman dimuat
-    TaskMakerOne.generateQuestion().then(data => {
-      currentQuestionData = data; // Simpan data soal
-      $('#loading-question').hide();
-      $('#question-text').text(data.questionText);
-      
-      // Render grafik
-      const ctx = document.getElementById('task-1-chart').getContext('2d');
-      new Chart(ctx, data.chartData);
+    // === LOGIKA UTAMA HALAMAN TASK 2 ===
+
+    // Menonaktifkan tombol submit hingga skrip siap
+    $('#submit-answer-btn-t2').prop('disabled', true).text('Memuat...');
+
+    TaskMakerTwo.generateQuestion().then(data => {
+      currentQuestion = data.questionText;
+      $('#loading-question-t2').hide();
+      $('#question-text-t2').text(currentQuestion);
+      // Aktifkan tombol submit setelah soal berhasil dimuat
+      $('#submit-answer-btn-t2').prop('disabled', false).text('Kirim & Dapatkan Nilai');
     }).catch(error => {
-      $('#loading-question').text('Gagal membuat soal. Silakan coba lagi.');
-      console.error(error);
+      $('#loading-question-t2').text('Gagal membuat soal. Silakan coba lagi.');
     });
 
-      $('#user-answer').one('input', startTimer);
-
-    // 2. Menghitung jumlah kata secara real-time
-    $('#user-answer').on('input', function() {
-      const text = $(this).val();
-      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-      $('#word-count').text(words.length);
+    $('#user-answer-t2').one('input', startTimer);
+    $('#user-answer-t2').on('input', function() {
+      const words = $(this).val().trim().split(/\s+/).filter(w => w.length > 0);
+      $('#word-count-t2').text(words.length);
     });
 
-    // 3. Mengirim jawaban untuk dinilai
-    $('#submit-answer-btn').on('click', function() {
-      const userAnswer = $('#user-answer').val();
-      if (!currentQuestionData || userAnswer.trim().length < 50) {
-        alert('Harap tulis jawaban minimal 50 kata sebelum mengirim.');
+    $('#submit-answer-btn-t2').on('click', function() {
+      const userAnswer = $('#user-answer-t2').val();
+      if (userAnswer.trim().length < 100) {
+        alert('Harap tulis jawaban minimal 100 kata sebelum mengirim.');
         return;
       }
-      
-      // Tampilkan area loading feedback
-      $('#feedback-container').show();
-      $('#loading-feedback').show();
-      $('#feedback-content').hide();
+      clearInterval(timerInterval_t2);
+      $('#feedback-container-t2').show();
+      $('#loading-feedback-t2').show();
+      $('#feedback-content-t2').empty().hide();
+      $('#download-button-container-t2').empty();
 
-      // Panggil fungsi grading
-      GradeTaskOne.gradeAnswer(currentQuestionData, userAnswer).then(feedback => {
-        $('#loading-feedback').hide();
+      // Panggil GradeTaskTwo yang sekarang sudah pasti terdefinisi
+      GradeTaskTwo.gradeAnswer(currentQuestion, userAnswer).then(feedback => {
+        currentFeedbackData = feedback;
+        $('#loading-feedback-t2').hide();
+        const feedbackHtml = renderFeedback(feedback);
+        $('#feedback-content-t2').html(feedbackHtml).show();
         
-        // Tampilkan feedback (contoh sederhana)
-        const feedbackHtml = `
-          <h2 class="text-2xl font-bold mb-4">Hasil Analisis AI</h2>
-          <p class="mb-2"><strong>Skor Keseluruhan:</strong> ${feedback.estimatedBandScore.overall}</p>
-          <pre class="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">${JSON.stringify(feedback, null, 2)}</pre>
-        `;
-        $('#feedback-content').html(feedbackHtml).show();
+        // const downloadButtonHtml = `<button id="download-report-btn-t2" class="mt-4 px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow-md hover:bg-gray-800 transition">Download Laporan (.docx)</button>`;
+        // $('#download-button-container-t2').html(downloadButtonHtml);
 
-        // Simpan ke localStorage
-        const submissionId = `submission_task1_${new Date().getTime()}`;
-        localStorage.setItem(submissionId, JSON.stringify({
-          question: currentQuestionData,
-          answer: userAnswer,
-          feedback: feedback
-        }));
-        alert('Hasil penilaian telah disimpan di Local Storage!');
-
+        const submissionId = `submission_task2_${new Date().getTime()}`;
+        localStorage.setItem(submissionId, JSON.stringify({ question: currentQuestion, answer: userAnswer, feedback: feedback }));
+        
       }).catch(error => {
-        $('#loading-feedback').text('Gagal mendapatkan penilaian. Silakan coba lagi.');
+        $('#loading-feedback-t2').text('Gagal mendapatkan penilaian.');
         console.error(error);
       });
     });
+    
+    $('body').on('click', '#download-report-btn-t2', function() {
+        generateDocxReport(currentQuestion, $('#user-answer-t2').val(), currentFeedbackData);
+    });
   });
 </script>
-
-
-

@@ -1,0 +1,189 @@
+<!-- 
+  File: views/user/writing_task_1.html
+  Halaman untuk latihan IELTS Writing Task 1.
+-->
+
+<!-- <style>
+  main#spapp > section {
+    display: none; /* Sembunyikan semua section secara default */
+  }
+  main#spapp > section.spapp-active {
+    display: block; /* Hanya tampilkan section yang aktif */
+  }
+</style> -->
+<div class="space-y-6">
+  <!-- Header Halaman -->
+  <div>
+    <h1 class="text-3xl font-bold text-gray-900">Latihan: IELTS Writing Task 1</h1>
+    <p class="mt-2 text-gray-500">Analisis data visual di bawah ini dan tulis laporan singkat minimal 150 kata dalam 20 menit.</p>
+  </div>
+
+  <!-- Area Soal dan Grafik -->
+  <div id="task-1-question-container" class="p-6 bg-white rounded-lg shadow-md">
+    <div id="loading-question" class="text-center py-10">
+      <p class="text-gray-600">Membuat soal baru dengan AI...</p>
+      <!-- Anda bisa menambahkan animasi loading di sini -->
+    </div>
+    <!-- Konten soal akan dimuat di sini oleh TaskMakerOne.js -->
+    <p id="question-text" class="mb-4 text-gray-700"></p>
+    <div class="w-full max-w-2xl mx-auto">
+      <canvas id="task-1-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Area Jawaban Pengguna -->
+  <div class="p-6 bg-white rounded-lg shadow-md">
+    <!-- Header Area Jawaban dengan Timer -->
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Jawaban Anda</h2>
+      <!-- Timer Box -->
+      <div id="timer-box" class="px-4 py-1.5 rounded-md text-white font-bold text-lg border-2 border-gray-400 bg-gray-400">
+        20:00
+      </div>
+    </div>
+    
+    <textarea id="user-answer" class="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500" placeholder="Tulis laporan Anda di sini untuk memulai timer..."></textarea>
+    
+    <div class="flex justify-between items-center mt-4">
+      <p class="text-sm text-gray-500">Jumlah Kata: <span id="word-count">0</span></p>
+      <button id="submit-answer-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition">
+        Kirim & Dapatkan Nilai
+      </button>
+    </div>
+  </div>
+
+  <!-- Area Hasil Umpan Balik -->
+  <div id="feedback-container" class="hidden p-6 bg-white rounded-lg shadow-md">
+    <div id="loading-feedback" class="text-center py-10">
+      <p class="text-gray-600">AI sedang menilai jawaban Anda, mohon tunggu...</p>
+    </div>
+    <!-- Hasil umpan balik akan ditampilkan di sini oleh GradeTaskOne.js -->
+    <div id="feedback-content"></div>
+  </div>
+</div>
+
+<!-- Memuat Library & Skrip Spesifik untuk Halaman Ini -->
+<!-- Chart.js untuk membuat grafik -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Skrip custom untuk halaman ini -->
+<script src="../js/TaskMakerOne.js"></script>
+<script src="../js/GradeTaskOne.js"></script>
+
+<!-- Skrip untuk mengontrol halaman ini -->
+<script>
+  $(document).ready(function() {
+    let currentQuestionData = null; // Untuk menyimpan data soal saat ini
+
+        // --- Variabel untuk Timer ---
+    let timerInterval = null;
+    let timeInSeconds = 20 * 60; // 20 menit
+    let timerStarted = false;
+
+    // Fungsi untuk mengupdate tampilan timer
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeInSeconds / 60);
+        let seconds = timeInSeconds % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds; // Tambah nol di depan jika < 10
+
+        $('#timer-box').text(`${minutes}:${seconds}`);
+
+        // Update warna background
+        const timerBox = $('#timer-box');
+        timerBox.removeClass('bg-green-500 bg-yellow-400 bg-red-600 border-green-600 border-yellow-500 border-red-700');
+
+        if (timeInSeconds <= 5 * 60) { // Kurang dari atau sama dengan 5 menit
+            timerBox.addClass('bg-red-600 border-red-700');
+        } else if (timeInSeconds <= 10 * 60) { // Kurang dari atau sama dengan 10 menit
+            timerBox.addClass('bg-yellow-400 border-yellow-500');
+        } else { // Di atas 10 menit
+            timerBox.addClass('bg-green-500 border-green-600');
+        }
+    }
+
+    // Fungsi untuk memulai timer
+    function startTimer() {
+        if (timerStarted) return; // Jangan mulai lagi jika sudah berjalan
+        timerStarted = true;
+        
+        updateTimerDisplay(); // Update tampilan awal
+
+        timerInterval = setInterval(() => {
+            timeInSeconds--;
+            updateTimerDisplay();
+
+            if (timeInSeconds <= 0) {
+                clearInterval(timerInterval);
+                alert("Waktu habis!");
+                $('#user-answer').prop('disabled', true); // Nonaktifkan textarea
+                $('#submit-answer-btn').click(); // Kirim jawaban secara otomatis
+            }
+        }, 1000);
+    }
+
+    // 1. Secara otomatis membuat soal saat halaman dimuat
+    TaskMakerOne.generateQuestion().then(data => {
+      currentQuestionData = data; // Simpan data soal
+      $('#loading-question').hide();
+      $('#question-text').text(data.questionText);
+      
+      // Render grafik
+      const ctx = document.getElementById('task-1-chart').getContext('2d');
+      new Chart(ctx, data.chartData);
+    }).catch(error => {
+      $('#loading-question').text('Gagal membuat soal. Silakan coba lagi.');
+      console.error(error);
+    });
+
+      $('#user-answer').one('input', startTimer);
+
+    // 2. Menghitung jumlah kata secara real-time
+    $('#user-answer').on('input', function() {
+      const text = $(this).val();
+      const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+      $('#word-count').text(words.length);
+    });
+
+    // 3. Mengirim jawaban untuk dinilai
+    $('#submit-answer-btn').on('click', function() {
+      const userAnswer = $('#user-answer').val();
+      if (!currentQuestionData || userAnswer.trim().length < 50) {
+        alert('Harap tulis jawaban minimal 50 kata sebelum mengirim.');
+        return;
+      }
+      
+      // Tampilkan area loading feedback
+      $('#feedback-container').show();
+      $('#loading-feedback').show();
+      $('#feedback-content').hide();
+
+      // Panggil fungsi grading
+      GradeTaskOne.gradeAnswer(currentQuestionData, userAnswer).then(feedback => {
+        $('#loading-feedback').hide();
+        
+        // Tampilkan feedback (contoh sederhana)
+        const feedbackHtml = `
+          <h2 class="text-2xl font-bold mb-4">Hasil Analisis AI</h2>
+          <p class="mb-2"><strong>Skor Keseluruhan:</strong> ${feedback.estimatedBandScore.overall}</p>
+          <pre class="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">${JSON.stringify(feedback, null, 2)}</pre>
+        `;
+        $('#feedback-content').html(feedbackHtml).show();
+
+        // Simpan ke localStorage
+        const submissionId = `submission_task1_${new Date().getTime()}`;
+        localStorage.setItem(submissionId, JSON.stringify({
+          question: currentQuestionData,
+          answer: userAnswer,
+          feedback: feedback
+        }));
+        alert('Hasil penilaian telah disimpan di Local Storage!');
+
+      }).catch(error => {
+        $('#loading-feedback').text('Gagal mendapatkan penilaian. Silakan coba lagi.');
+        console.error(error);
+      });
+    });
+  });
+</script>
+
+
+

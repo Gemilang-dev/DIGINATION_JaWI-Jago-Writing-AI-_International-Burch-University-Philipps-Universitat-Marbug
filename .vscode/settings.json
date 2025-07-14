@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/ca24b54f-f70f-4071-a9a1-51b389eae992/resourceGroups/jawi/providers/Microsoft.Web/sites/jawi",
+    "appService.deploySubpath": "."
+}

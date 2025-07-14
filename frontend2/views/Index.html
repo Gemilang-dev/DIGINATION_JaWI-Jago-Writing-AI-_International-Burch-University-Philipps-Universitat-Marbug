@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChemLP | Dashboard</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/styleProduct.css">
+    <link rel="stylesheet" href="../css/spapp.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <style>
+        @import url('https://cdn.jsdelivr.net/npm/@tailwindcss/forms@0.3.4/dist/forms.min.css');
+    </style>
+
+    <!-- JS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  <!-- sweetalert2 -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+
+    <script src="../js/util/quizServices.js"></script>
+<script src="../js/util/textMaterialServices.js"></script>
+
+    <script src="../utils/constants.js"></script>
+    <script src="../utils/utils.js"></script>
+    <script src="../utils/rest-client.js"></script>
+    <script src="../utils/auth-nav.js"></script>
+
+    
+    <!-- Custom JS -->
+    <script src="../services/user-service.js"></script> 
+    <script src="../services/student-service.js"></script> 
+    <script src="../services/material-service.js"></script>
+    <script src="../services/textMaterial-service.js"></script>
+    <script src="../services/quiz-service.js"></script>
+
+    <script src="../controllers/profileController.js"></script> 
+    <script src="../controllers/studentsController.js"></script>
+    <script src="../controllers/addStudentController.js"></script>
+    <script src="../controllers/materialManagementController.js"></script>
+    <script src="../controllers/textMaterialController.js"></script>
+    <script src="../controllers/quizManagementController.js"></script>
+    <script src="../controllers/addMaterialController.js"></script>
+    <script src="../controllers/StudyController.js"></script>
+
+
+    <!-- Custom JS SPA -->
+
+    <script src="../js/jquery.spapp.js"></script>
+    <script src="../js/custom.js"></script>
+  
+
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div>
+        <div class="sm:hidden">
+            <label for="Tab" class="sr-only">Tab</label>
+            <select id="Tab" class="w-full rounded-md border-gray-200" onchange="location = this.value;">
+                <option value="#students">Student Informastion</option>
+                <option value="#study">Study</option>
+                <option value="#profile">Profile</option>
+                <option value="#materialManagement">Material Management</option>
+                <option value="#textMaterial">Text Material</option>
+                <option value="#addStudent">AddStudent</option>
+                <option value="#quizManagement">quizManagement</option>
+                <option value="#product">Product</option>
+                <option value="#faq">FAQs</option>
+                <option value="javascript:void(0);" onclick="UserService.logout()">Logout</option>
+            </select>
+        </div>
+
+        <div class="hidden sm:block bg-white fixed top-0 w-full z-10 border-b border-gray-200">
+            <div class="container mx-auto px-4">
+                <nav id="tabs" class="flex gap-6" aria-label="Tabs">
+                    <!-- Tabs will be injected here -->
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="spapp" role="main" class="mt-32">
+        <section id="students" class="p-8" data-load="students.html"></section>
+        <section id="materialManagement" class="p-8" data-load="materialManagement.html"></section>
+        <section id="addStudent" class="p-8" data-load="addStudent.html"></section> 
+        <section id="study" class="p-8"></section>
+        <section id="profile" class="p-8"></section>
+        <section id="product" class="p-8"></section>
+        <section id="textMaterial" class="p-8" data-load="textMaterial.html"></section>
+        <section id="quizManagement" class="p-8" data-load="quizManagement.html"></section>
+        <section id="addMaterial" class="p-8" data-load="addMaterial.html"></section>
+        <section id="faq" class="p-8" data-load="tpl/faq.html"></section>
+        <section id="study" class="h-full" data-load="study.html"></section>
+    </main>
+
+
+</body>
+</html>

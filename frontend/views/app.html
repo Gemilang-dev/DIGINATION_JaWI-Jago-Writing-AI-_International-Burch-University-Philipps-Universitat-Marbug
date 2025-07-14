@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JaWi AI Application</title>
+    <!-- Link ke CDN Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menambahkan transisi untuk panah accordion agar lebih mulus */
+        .accordion-arrow {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Layout Utama Aplikasi -->
+    <div class="flex h-screen bg-gray-50">
+        
+        <!-- Placeholder untuk Sidebar Kiri (Akan diisi oleh custom.js) -->
+        <div id="app-sidebar" class="flex-shrink-0">
+            <!-- Sidebar akan di-render di sini... -->
+        </div>
+
+        <!-- Area Konten Utama (Kanan) -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- Placeholder untuk Navbar Atas (Akan diisi oleh custom.js) -->
+            <header id="app-header" class="bg-white shadow-sm z-10"></header>
+            
+            <!-- Konten SPA akan dimuat di sini oleh spapp.js -->
+            <main id="spapp" class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-8">
+                
+                <!-- Definisikan semua kemungkinan section/view -->
+                <section id="home" data-load="user/home.html"></section>
+                <section id="writing-task-1" data-load="user/writing_task_1.html"></section>
+                <section id="writing-task-2" data-load="user/writing_task_2.html"></section>
+                <section id="history" data-load="user/history.html"></section>
+                <section id="admindashboard" data-load="admin/admindashboard.html"></section>
+                
+                <section id="error_404">
+                    <h2 class="text-2xl font-bold">404 - Halaman Tidak Ditemukan</h2>
+                    <p>Halaman yang Anda tuju tidak ada dalam aplikasi ini.</p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- LIBRARY & SKRIP INTI APLIKASI -->
+    <!-- =================================================================== -->
+    
+    <!-- 1. Memuat jQuery dari CDN (Internet) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- 2. Memuat library spapp & skrip custom dari folder 'js' -->
+    <!-- Path ini sekarang benar karena app.html dan folder js berada di level yang sama -->
+    <script src="../js/jquery.spapp.min.js"></script>
+    <script src="../js/custom.js"></script>
+
+</body>
+</html>

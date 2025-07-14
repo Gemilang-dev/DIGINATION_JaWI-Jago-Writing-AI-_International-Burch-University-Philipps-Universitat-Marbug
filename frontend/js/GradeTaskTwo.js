@@ -1,11 +1,12 @@
 // File: js/GradeTaskTwo.js
-// Bertanggung jawab untuk menilai esai Task 2 melalui Serverless Function.
+// Bertanggung jawab untuk menilai esai Task 2.
 
 const GradeTaskTwo = {
-    // API Key telah dihapus dari sini untuk keamanan.
+    // GANTI DENGAN API KEY ANDA
+    GEMINI_API_KEY: "AIzaSyCfU12_CTpkhYKn4b1opJeztP-qw0Ll6E4",
 
     async gradeAnswer(question, userAnswer) {
-        console.log("Sending Task 2 essay for grading via Serverless Function...");
+        console.log("Sending Task 2 essay for grading...");
 
         const prompt = `
             You are a professional IELTS Writing examiner. Your task is to evaluate the following IELTS Writing Task 2 essay.
@@ -18,8 +19,8 @@ const GradeTaskTwo = {
             {
               "overallScore": { "score": "float", "summary": "string" },
               "criteriaScores": [
-                { "name": "Task Response (TR)", "score": "float", "summary": "string", "subScores": [ { "name": "Relevance to Prompt", "score": "integer" }, { "name": "Clarity of Position", "score": "integer" } ] },
-                { "name": "Coherence & Cohesion (CC)", "score": "float", "summary": "string", "subScores": [ { "name": "Logical Organization", "score": "integer" }, { "name": "Cohesive Devices Usage", "score": "integer" } ] },
+                { "name": "Task Response (TR)", "score": "float", "summary": "string", "subScores": [ { "name": "Relevance to Prompt", "score": "integer" }, { "name": "Clarity of Position", "score": "integer" }, { "name": "Depth of Ideas", "score": "integer" } ] },
+                { "name": "Coherence & Cohesion (CC)", "score": "float", "summary": "string", "subScores": [ { "name": "Logical Organization", "score": "integer" }, { "name": "Cohesive Devices Usage", "score": "integer" }, { "name": "Paragraphing", "score": "integer" } ] },
                 { "name": "Lexical Resource (LR)", "score": "float", "summary": "string", "subScores": [ { "name": "Vocabulary Range", "score": "integer" }, { "name": "Lexical Accuracy", "score": "integer" } ] },
                 { "name": "Grammatical Range & Accuracy (GRA)", "score": "float", "summary": "string", "subScores": [ { "name": "Sentence Structure Variety", "score": "integer" }, { "name": "Grammar Accuracy", "score": "integer" } ] }
               ],
@@ -29,17 +30,19 @@ const GradeTaskTwo = {
             }
         `;
 
+        // KOREKSI: Menambahkan '/' setelah 'models'
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.GEMINI_API_KEY}`;
+
         try {
-            // PERUBAHAN UTAMA: Panggil fungsi Netlify kita sendiri
-            const response = await fetch('/.netlify/functions/callGemini', {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt }),
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
             });
 
             if (!response.ok) {
                 const errorBody = await response.text();
-                throw new Error(`Serverless function error! status: ${response.status}, body: ${errorBody}`);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
             }
 
             const result = await response.json();

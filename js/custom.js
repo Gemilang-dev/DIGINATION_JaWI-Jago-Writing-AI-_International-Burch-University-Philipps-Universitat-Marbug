@@ -79,7 +79,7 @@ $(document).ready(function() {
     // LANGKAH 3: Inisialisasi & Jalankan SPA
     // ==========================================================
     var app = $.spapp({
-      templateDir: './', // Path ke folder template dari app.html
+      templateDir: '', // Path ke folder template dari app.html
         pageNotFound: 'error_404'
     });
 

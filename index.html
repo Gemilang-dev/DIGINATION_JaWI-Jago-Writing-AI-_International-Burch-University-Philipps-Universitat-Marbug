@@ -196,7 +196,7 @@
                 try {
                     // Path ini relatif terhadap index.html.
                     // Pastikan folder 'data' sejajar dengan 'index.html'.
-                    const response = await fetch('./data/users.json');
+                    const response = await fetch('data/users.json');
                     
                     if (!response.ok) {
                         // Jika gagal, tampilkan status error di console untuk debugging
@@ -213,7 +213,7 @@
                             role: foundUser.role
                         }));
                         // alert('Login berhasil! Mengarahkan ke aplikasi...');
-                        window.location.href = '/views/app.html';
+                        window.location.href = 'views/app.html#history';
                     } else {
                         alert('Email atau password salah!');
                     }

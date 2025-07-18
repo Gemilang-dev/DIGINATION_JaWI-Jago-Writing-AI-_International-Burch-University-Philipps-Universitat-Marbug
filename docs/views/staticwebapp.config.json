@@ -1,7 +1,7 @@
 {
   "routes": [
     {
-      "route": "../data/*",
+      "route": "/../data/*",
       "headers": {
         "Content-Type": "application/json"
       }

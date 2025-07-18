@@ -196,7 +196,7 @@
                 try {
                     // Path ini relatif terhadap index.html.
                     // Pastikan folder 'data' sejajar dengan 'index.html'.
-                    const response = await fetch('../data/users.json');
+                    const response = await fetch('data/users.json');
                     
                     if (!response.ok) {
                         // Jika gagal, tampilkan status error di console untuk debugging

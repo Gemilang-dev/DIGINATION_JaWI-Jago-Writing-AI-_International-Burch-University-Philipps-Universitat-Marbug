@@ -1,7 +1,11 @@
 {
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*", "/js/*", "/css/*", "/data/*"]
+  },
   "routes": [
     {
-      "route": "/../data/*",
+      "route": "/data/*",
       "headers": {
         "Content-Type": "application/json"
       }

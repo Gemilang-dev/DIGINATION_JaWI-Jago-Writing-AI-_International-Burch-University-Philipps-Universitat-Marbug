@@ -19,5 +19,12 @@
     "email": "citra@email.com",
     "password": "user123",
     "role": "user"
+  },
+    {
+    "id": 4,
+    "username": "Test",
+    "email": "test@jawi.com",
+    "password": "test123",
+    "role": "user"
   }
 ]

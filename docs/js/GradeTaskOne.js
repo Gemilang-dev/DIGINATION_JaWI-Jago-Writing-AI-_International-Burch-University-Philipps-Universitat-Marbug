@@ -1,4 +1,4 @@
-GradeTaskOne.js
+
 
 // File: js/GradeTaskOne.js
 // Bertanggung jawab untuk menilai jawaban Task 1 dengan output JSON yang sangat detail.
@@ -121,4 +121,5 @@ const GradeTaskOne = {
             throw error;
         }
     }
-};
+}
+;

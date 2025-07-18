@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JaWi AI - Pelatih Menulis IELTS Pribadi Anda</title>
+
+    <link rel="icon" type="image/png" href="jawi.png">
+
     
     <!-- Link ke CDN Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -71,6 +74,11 @@
         <section class="bg-white">
             <div class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:items-center">
                 <div class="mx-auto max-w-xl text-center">
+                    <img 
+        src="logo jawi fix.png" 
+        alt="Logo Aplikasi" 
+        class="mx-auto mb-6 w-1/2 h-auto"
+    />
                     <h1 class="text-3xl font-extrabold sm:text-5xl">
                         Capai Skor IELTS Impian Anda.
                         <strong class="font-extrabold text-teal-600 sm:block"> Dengan Pelatih AI Pribadi. </strong>
@@ -196,7 +204,7 @@
                 try {
                     // Path ini relatif terhadap index.html.
                     // Pastikan folder 'data' sejajar dengan 'index.html'.
-                    const response = await fetch('../data/users.json');
+                    const response = await fetch('data/users.json');
                     
                     if (!response.ok) {
                         // Jika gagal, tampilkan status error di console untuk debugging
@@ -225,7 +233,7 @@
 
             document.getElementById('register-form-submit').addEventListener('submit', function(e) {
                 e.preventDefault();
-                alert('Fitur registrasi dinonaktifkan dalam mode demo. Silakan gunakan akun yang sudah ada untuk login.');
+                alert('Fitur registrasi dinonaktifkan dalam mode demo. Silakan gunakan akun yang sudah ada untuk login.\n DEMO ACOUNT \n email = email = test@jawi.com \n pw = test123');
                 openModal('login');
             });
         });

@@ -1,0 +1,13 @@
+{
+  "routes": [
+    {
+      "route": "/data/*",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  ],
+  "mimeTypes": {
+    ".json": "application/json"
+  }
+}
